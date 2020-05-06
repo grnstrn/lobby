@@ -1,5 +1,7 @@
 package com.example.lobby.domain;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -11,8 +13,11 @@ import java.time.LocalDateTime;
 
 public class User implements Serializable {
     @Id
+    @JsonView(Views.IdName.class)
     private String id;
+    @JsonView(Views.IdName.class)
     private String name;
+    @JsonView(Views.IdName.class)
     private String userpic;
     private String email;
     private String gender;

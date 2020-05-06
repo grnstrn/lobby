@@ -1,26 +1,89 @@
 <template>
-    <div>
-        <div v-if="!profile">Необходимо авторизоваться через <a href="/login">Google</a></div>
-        <div v-else>
-            <div>{{profile.name}}&nbsp;<a href="/logout">Выйти</a></div>
-            <messages-list :messages="messages"/>
-        </div>
-    </div>
+    <v-app>
+        <v-app-bar app>
+            <v-card dark>
+                <v-toolbar
+                        color="primary"
+                        text
+                >
+                    <v-switch
+                            v-model="$vuetify.theme.dark"
+                            hide-details
+                            inset
+                            label="Theme Dark"
+                    ></v-switch>
+
+                </v-toolbar>
+            </v-card>
+                <v-toolbar-title>Lobby</v-toolbar-title>
+            <v-btn text
+                   v-if="profile"
+                   :disabled="$route.path === '/'"
+                   @click="showMessages">
+                Messages
+            </v-btn>
+            <v-spacer></v-spacer>
+            <v-btn text
+                   v-if="profile"
+                   :disabled="$route.path === '/profile'"
+                   @click="showProfile">
+                {{profile.name}}
+            </v-btn>
+
+            <v-btn v-if="profile" icon href="/logout">
+                <v-icon>exit_to_app</v-icon>
+            </v-btn>
+        </v-app-bar>
+
+        <v-content>
+            <router-view></router-view>
+        </v-content>
+    </v-app>
 </template>
 
 <script>
-    import MessagesList from 'components/messages/MessageList.vue'
+    import { mapState, mapMutations } from 'vuex'
+    import { addHandler } from 'util/ws'
     export default {
-        components:{
-            MessagesList
+        computed: mapState(['profile']),
+        methods: {
+            ...mapMutations(['addMessageMutation', 'updateMessageMutation', 'removeMessageMutation']),
+            showMessages() {
+                this.$router.push('/')
+            },
+            showProfile() {
+                this.$router.push('/profile')
+            }
         },
-        data() {
-            return {
-                messages: frontendData.messages,
-                profile: frontendData.profile
+        created() {
+            addHandler(data => {
+                if (data.objectType === 'MESSAGE') {
+                    switch (data.eventType) {
+                        case 'CREATE':
+                            this.addMessageMutation(data.body)
+                            break
+                        case 'UPDATE':
+                            this.updateMessageMutation(data.body)
+                            break
+                        case 'REMOVE':
+                            this.removeMessageMutation(data.body)
+                            break
+                        default:
+                            console.error(`Looks like the event type if unknown "${data.eventType}"`)
+                    }
+                } else {
+                    console.error(`Looks like the object type if unknown "${data.objectType}"`)
+                }
+            })
+        },
+        beforeMount() {
+            if (!this.profile) {
+                this.$router.replace('/auth')
             }
         }
     }
+
+
 </script>
 
 <style>

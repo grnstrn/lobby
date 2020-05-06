@@ -28,8 +28,11 @@ public class HelloController {
     @GetMapping
     public String hello(Model model, @AuthenticationPrincipal User user){
         HashMap<Object,Object> data = new HashMap<>();
+
+        if(user !=null){
         data.put("profile",user);
         data.put("messages",messageRepo.findAll());
+        }
         model.addAttribute("frontendData",data);
         model.addAttribute("isDevMode","dev".equals(profile));
         return "index";
